@@ -9,6 +9,7 @@ import { DecksScreen } from './src/screens/DecksScreen';
 import { DeckDetailScreen } from './src/screens/DeckDetailScreen';
 import { AddEditCardScreen } from './src/screens/AddEditCardScreen';
 import { StudyScreen } from './src/screens/StudyScreen';
+import { BackupScreen } from './src/screens/BackupScreen';
 import { colors } from './src/theme';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -39,6 +40,7 @@ export default function App() {
               component={StudyScreen}
               options={{ title: 'Study', presentation: 'fullScreenModal' }}
             />
+            <Stack.Screen name="Backup" component={BackupScreen} options={{ title: 'Backup & transfer' }} />
           </Stack.Navigator>
         </NavigationContainer>
       </VocabProvider>

@@ -1,20 +1,22 @@
 # Vocab Flashcards
 
-A mobile app for memorizing vocabulary using spaced repetition, built with
-Expo (React Native + TypeScript).
+A mobile app (iOS + Android) for memorizing vocabulary, built with Expo
+(React Native + TypeScript).
 
 ## Features
 
 - **Decks** — organize vocabulary by language or topic.
-- **Flashcards** — add term/translation pairs with optional notes (example
-  sentences, gender, pronunciation, etc).
-- **Spaced repetition** — reviews are scheduled with the SM-2 algorithm (the
-  same one used by Anki): cards you find easy are shown less often, cards you
-  struggle with come back sooner.
-- **Study sessions** — flip cards, then rate your recall (Again / Hard / Good
-  / Easy) to reschedule the next review.
+- **Custom flashcards** — add any word plus your own translation and notes
+  (example sentence, gender, pronunciation, or notes in any language).
+- **Study sessions** — tap a card to reveal the translation, then mark it
+  right (green) or wrong (red).
+- **Revise wrong answers** — every card marked wrong is tracked, so you can
+  run a focused session on just those later, from the deck screen.
+- **Backup & transfer** — export your whole vocabulary to a file, then
+  import it on another phone to switch devices without an account. No
+  backend, no cloud — just a file you control.
 - **Offline-first** — all data is stored locally on-device with
-  `AsyncStorage`; no account or network connection required.
+  `AsyncStorage`; no account or network connection required to use the app.
 
 ## Getting started
 
@@ -31,34 +33,44 @@ scan the QR code with the Expo Go app on your phone.
 ```
 App.tsx                     # navigation + providers
 src/
-  types.ts                  # Deck / Card / Rating types
+  types.ts                  # Deck / Card types
   theme.ts                  # colors, spacing, radius tokens
   lib/
-    srs.ts                  # SM-2 spaced repetition scheduling
     storage.ts               # AsyncStorage persistence
+    backup.ts                 # export/import to a JSON file
     id.ts                    # id generation
   context/
-    VocabProvider.tsx        # app state (decks/cards) + CRUD + persistence
+    VocabProvider.tsx        # app state (decks/cards) + CRUD + import merge
   navigation/
     types.ts                 # React Navigation param types
   components/
     Flashcard.tsx             # flip-animation card
   screens/
     DecksScreen.tsx           # deck list
-    DeckDetailScreen.tsx      # cards in a deck
+    DeckDetailScreen.tsx      # cards in a deck, study / revise entry points
     AddEditCardScreen.tsx     # add/edit a card
-    StudyScreen.tsx           # review session
+    StudyScreen.tsx           # review session (all cards, or wrong-only)
+    BackupScreen.tsx          # export / import vocabulary
 ```
 
-## How the scheduling works
+## Switching phones (backup & transfer)
 
-Each card tracks `interval` (days), `repetitions`, `easeFactor`, and
-`dueDate`. When you rate a card during study, `src/lib/srs.ts` recomputes
-those fields with the SM-2 algorithm:
+Tap **Backup** on the deck list, then:
 
-- **Again** resets the card to be reviewed tomorrow.
-- **Hard / Good / Easy** grow the interval (1 day → 6 days → interval ×
-  ease factor), with the ease factor nudged up or down based on how easy the
-  recall was.
+- **Export** writes all your decks/cards to a `vocabflashcards-export-*.json`
+  file and opens the system share sheet — send it to yourself however you
+  like (email, AirDrop, Google Drive, Files app, etc).
+- **Import** (on the new phone) opens the file picker; pick that file and
+  its decks/cards are merged into your library. Decks are matched by name
+  and cards by term+translation, so importing the same file twice never
+  creates duplicates.
 
-A deck's "Study" button is only enabled when it has at least one due card.
+The export file is plain JSON with a `format`/`version` header so the app
+can validate it on import.
+
+## How study works
+
+Each card has a `status`: `unseen`, `correct`, or `incorrect`. During a
+study session, marking a card **Right** sets it to `correct`, **Wrong**
+sets it to `incorrect`. A deck's "Revise wrong answers" button studies only
+the cards currently marked `incorrect`.

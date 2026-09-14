@@ -5,4 +5,5 @@ export type RootStackParamList = {
   DeckDetail: { deckId: string };
   AddEditCard: { deckId: string; cardId?: string };
   Study: { deckId: string; mode: StudyMode };
+  Backup: undefined;
 };

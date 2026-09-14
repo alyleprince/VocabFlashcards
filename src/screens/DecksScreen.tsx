@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useLayoutEffect, useState } from 'react';
 import {
   FlatList,
   Modal,
@@ -21,6 +21,16 @@ export function DecksScreen({ navigation }: Props) {
   const [modalVisible, setModalVisible] = useState(false);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <Pressable onPress={() => navigation.navigate('Backup')} hitSlop={12}>
+          <Text style={styles.headerButton}>Backup</Text>
+        </Pressable>
+      ),
+    });
+  }, [navigation]);
 
   const openModal = () => {
     setName('');
@@ -177,6 +187,7 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   fabText: { color: colors.white, fontSize: 28, lineHeight: 30 },
+  headerButton: { color: colors.primary, fontWeight: '600', fontSize: 15, paddingHorizontal: spacing.xs },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.4)',

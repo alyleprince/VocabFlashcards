@@ -35,6 +35,7 @@ interface VocabContextValue {
   getCardsForDeck: (deckId: string) => Card[];
   getIncorrectCardsForDeck: (deckId: string) => Card[];
   getDeckStats: (deckId: string) => DeckStats;
+  importVocabData: (incoming: VocabData) => { decksAdded: number; cardsAdded: number };
 }
 
 const VocabContext = createContext<VocabContextValue | undefined>(undefined);
@@ -147,6 +148,71 @@ export function VocabProvider({ children }: { children: React.ReactNode }) {
     [cards]
   );
 
+  // Imports decks/cards from a backup file. Decks are matched onto existing
+  // ones by name (case-insensitive) instead of id, since ids are meaningless
+  // across devices; cards are skipped if a card with the same term +
+  // translation already exists in the resolved deck, to keep re-imports
+  // idempotent.
+  const importVocabData = useCallback(
+    (incoming: VocabData): { decksAdded: number; cardsAdded: number } => {
+      let decksAdded = 0;
+      let cardsAdded = 0;
+      const nextDecks = [...decks];
+      const deckIdMap = new Map<string, string>();
+
+      for (const incomingDeck of incoming.decks) {
+        const existing = nextDecks.find(
+          (d) => d.name.trim().toLowerCase() === incomingDeck.name.trim().toLowerCase()
+        );
+        if (existing) {
+          deckIdMap.set(incomingDeck.id, existing.id);
+        } else {
+          const newDeck: Deck = {
+            id: generateId(),
+            name: incomingDeck.name,
+            description: incomingDeck.description,
+            createdAt: incomingDeck.createdAt ?? new Date().toISOString(),
+          };
+          nextDecks.push(newDeck);
+          deckIdMap.set(incomingDeck.id, newDeck.id);
+          decksAdded += 1;
+        }
+      }
+
+      const nextCards = [...cards];
+      for (const incomingCard of incoming.cards) {
+        const resolvedDeckId = deckIdMap.get(incomingCard.deckId);
+        if (!resolvedDeckId) continue;
+        const isDuplicate = nextCards.some(
+          (c) =>
+            c.deckId === resolvedDeckId &&
+            c.term.trim().toLowerCase() === incomingCard.term.trim().toLowerCase() &&
+            c.translation.trim().toLowerCase() === incomingCard.translation.trim().toLowerCase()
+        );
+        if (isDuplicate) continue;
+        const status: CardStatus =
+          incomingCard.status === 'correct' || incomingCard.status === 'incorrect'
+            ? incomingCard.status
+            : 'unseen';
+        nextCards.push({
+          id: generateId(),
+          deckId: resolvedDeckId,
+          term: incomingCard.term,
+          translation: incomingCard.translation,
+          notes: incomingCard.notes,
+          createdAt: incomingCard.createdAt ?? new Date().toISOString(),
+          status,
+        });
+        cardsAdded += 1;
+      }
+
+      setDecks(nextDecks);
+      setCards(nextCards);
+      return { decksAdded, cardsAdded };
+    },
+    [decks, cards]
+  );
+
   const value = useMemo<VocabContextValue>(
     () => ({
       ready,
@@ -162,6 +228,7 @@ export function VocabProvider({ children }: { children: React.ReactNode }) {
       getCardsForDeck,
       getIncorrectCardsForDeck,
       getDeckStats,
+      importVocabData,
     }),
     [
       ready,
@@ -177,6 +244,7 @@ export function VocabProvider({ children }: { children: React.ReactNode }) {
       getCardsForDeck,
       getIncorrectCardsForDeck,
       getDeckStats,
+      importVocabData,
     ]
   );
 
