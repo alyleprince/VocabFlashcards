@@ -7,14 +7,15 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { Card, Deck, Rating, VocabData } from '../types';
+import { Card, CardStatus, Deck, VocabData } from '../types';
 import { loadData, saveData } from '../lib/storage';
-import { createNewCardSchedule, isDue, scheduleReview } from '../lib/srs';
 import { generateId } from '../lib/id';
 
 interface DeckStats {
   total: number;
-  due: number;
+  correct: number;
+  incorrect: number;
+  unseen: number;
 }
 
 interface VocabContextValue {
@@ -30,9 +31,9 @@ interface VocabContextValue {
     updates: Partial<Pick<Card, 'term' | 'translation' | 'notes'>>
   ) => void;
   deleteCard: (cardId: string) => void;
-  reviewCard: (cardId: string, rating: Rating) => void;
+  markCard: (cardId: string, correct: boolean) => void;
   getCardsForDeck: (deckId: string) => Card[];
-  getDueCardsForDeck: (deckId: string) => Card[];
+  getIncorrectCardsForDeck: (deckId: string) => Card[];
   getDeckStats: (deckId: string) => DeckStats;
 }
 
@@ -93,7 +94,7 @@ export function VocabProvider({ children }: { children: React.ReactNode }) {
         translation: translation.trim(),
         notes: notes?.trim(),
         createdAt: new Date().toISOString(),
-        ...createNewCardSchedule(),
+        status: 'unseen',
       };
       setCards((prev) => [...prev, card]);
       return card;
@@ -114,9 +115,12 @@ export function VocabProvider({ children }: { children: React.ReactNode }) {
     setCards((prev) => prev.filter((c) => c.id !== cardId));
   }, []);
 
-  const reviewCard = useCallback((cardId: string, rating: Rating) => {
+  const markCard = useCallback((cardId: string, correct: boolean) => {
+    const status: CardStatus = correct ? 'correct' : 'incorrect';
     setCards((prev) =>
-      prev.map((c) => (c.id === cardId ? { ...c, ...scheduleReview(c, rating) } : c))
+      prev.map((c) =>
+        c.id === cardId ? { ...c, status, lastReviewed: new Date().toISOString() } : c
+      )
     );
   }, []);
 
@@ -125,8 +129,8 @@ export function VocabProvider({ children }: { children: React.ReactNode }) {
     [cards]
   );
 
-  const getDueCardsForDeck = useCallback(
-    (deckId: string) => cards.filter((c) => c.deckId === deckId && isDue(c)),
+  const getIncorrectCardsForDeck = useCallback(
+    (deckId: string) => cards.filter((c) => c.deckId === deckId && c.status === 'incorrect'),
     [cards]
   );
 
@@ -135,7 +139,9 @@ export function VocabProvider({ children }: { children: React.ReactNode }) {
       const deckCards = cards.filter((c) => c.deckId === deckId);
       return {
         total: deckCards.length,
-        due: deckCards.filter((c) => isDue(c)).length,
+        correct: deckCards.filter((c) => c.status === 'correct').length,
+        incorrect: deckCards.filter((c) => c.status === 'incorrect').length,
+        unseen: deckCards.filter((c) => c.status === 'unseen').length,
       };
     },
     [cards]
@@ -152,9 +158,9 @@ export function VocabProvider({ children }: { children: React.ReactNode }) {
       addCard,
       updateCard,
       deleteCard,
-      reviewCard,
+      markCard,
       getCardsForDeck,
-      getDueCardsForDeck,
+      getIncorrectCardsForDeck,
       getDeckStats,
     }),
     [
@@ -167,9 +173,9 @@ export function VocabProvider({ children }: { children: React.ReactNode }) {
       addCard,
       updateCard,
       deleteCard,
-      reviewCard,
+      markCard,
       getCardsForDeck,
-      getDueCardsForDeck,
+      getIncorrectCardsForDeck,
       getDeckStats,
     ]
   );

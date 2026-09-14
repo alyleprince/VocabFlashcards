@@ -5,36 +5,33 @@ import { RootStackParamList } from '../navigation/types';
 import { useVocab } from '../context/VocabProvider';
 import { Flashcard } from '../components/Flashcard';
 import { colors, radius, spacing } from '../theme';
-import { Rating } from '../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Study'>;
 
-const RATING_BUTTONS: { rating: Rating; label: string; color: string }[] = [
-  { rating: 'again', label: 'Again', color: colors.danger },
-  { rating: 'hard', label: 'Hard', color: colors.warning },
-  { rating: 'good', label: 'Good', color: colors.primary },
-  { rating: 'easy', label: 'Easy', color: colors.success },
-];
-
 export function StudyScreen({ route, navigation }: Props) {
-  const { deckId } = route.params;
-  const { getDueCardsForDeck, reviewCard } = useVocab();
-  // Snapshot the due queue once so it doesn't shrink mid-session as cards
-  // get rescheduled out of "due".
-  const [queue] = useState(() => getDueCardsForDeck(deckId).map((c) => c.id));
-  const { cards } = useVocab();
+  const { deckId, mode } = route.params;
+  const { getCardsForDeck, getIncorrectCardsForDeck, markCard, cards } = useVocab();
+  // Snapshot the queue once so it doesn't change size mid-session as cards
+  // get marked correct/incorrect.
+  const [queue] = useState(() =>
+    (mode === 'incorrect' ? getIncorrectCardsForDeck(deckId) : getCardsForDeck(deckId)).map(
+      (c) => c.id
+    )
+  );
   const [index, setIndex] = useState(0);
-  const [reviewedCount, setReviewedCount] = useState(0);
+  const [correctCount, setCorrectCount] = useState(0);
+  const [incorrectCount, setIncorrectCount] = useState(0);
 
   const currentCard = useMemo(
     () => cards.find((c) => c.id === queue[index]),
     [cards, queue, index]
   );
 
-  const handleRate = (rating: Rating) => {
+  const handleMark = (correct: boolean) => {
     if (!currentCard) return;
-    reviewCard(currentCard.id, rating);
-    setReviewedCount((n) => n + 1);
+    markCard(currentCard.id, correct);
+    if (correct) setCorrectCount((n) => n + 1);
+    else setIncorrectCount((n) => n + 1);
     if (index + 1 >= queue.length) {
       navigation.goBack();
     } else {
@@ -42,12 +39,14 @@ export function StudyScreen({ route, navigation }: Props) {
     }
   };
 
-  if (!currentCard) {
+  if (queue.length === 0 || !currentCard) {
     return (
       <View style={styles.doneContainer}>
         <Text style={styles.doneTitle}>All done! 🎉</Text>
         <Text style={styles.doneSubtitle}>
-          You reviewed {reviewedCount} card{reviewedCount === 1 ? '' : 's'}.
+          {correctCount + incorrectCount === 0
+            ? 'Nothing to study here.'
+            : `${correctCount} right, ${incorrectCount} wrong.`}
         </Text>
         <Pressable style={styles.doneButton} onPress={() => navigation.goBack()}>
           <Text style={styles.doneButtonText}>Back to deck</Text>
@@ -69,17 +68,20 @@ export function StudyScreen({ route, navigation }: Props) {
           notes={currentCard.notes}
         />
       </View>
-      <Text style={styles.instructions}>Tap the card to flip, then rate your recall</Text>
+      <Text style={styles.instructions}>Tap the card to reveal the translation</Text>
       <View style={styles.ratingRow}>
-        {RATING_BUTTONS.map((b) => (
-          <Pressable
-            key={b.rating}
-            style={[styles.ratingButton, { backgroundColor: b.color }]}
-            onPress={() => handleRate(b.rating)}
-          >
-            <Text style={styles.ratingButtonText}>{b.label}</Text>
-          </Pressable>
-        ))}
+        <Pressable
+          style={[styles.ratingButton, styles.incorrectButton]}
+          onPress={() => handleMark(false)}
+        >
+          <Text style={styles.ratingButtonText}>✕ Wrong</Text>
+        </Pressable>
+        <Pressable
+          style={[styles.ratingButton, styles.correctButton]}
+          onPress={() => handleMark(true)}
+        >
+          <Text style={styles.ratingButtonText}>✓ Right</Text>
+        </Pressable>
       </View>
     </View>
   );
@@ -97,7 +99,9 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     alignItems: 'center',
   },
-  ratingButtonText: { color: colors.white, fontWeight: '700' },
+  incorrectButton: { backgroundColor: colors.danger },
+  correctButton: { backgroundColor: colors.success },
+  ratingButtonText: { color: colors.white, fontWeight: '700', fontSize: 16 },
   doneContainer: {
     flex: 1,
     backgroundColor: colors.background,

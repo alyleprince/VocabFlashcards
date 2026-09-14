@@ -5,9 +5,14 @@ import { RootStackParamList } from '../navigation/types';
 import { useVocab } from '../context/VocabProvider';
 import { colors, radius, spacing } from '../theme';
 import { Card } from '../types';
-import { isDue } from '../lib/srs';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DeckDetail'>;
+
+const STATUS_COLOR: Record<Card['status'], string> = {
+  unseen: colors.border,
+  correct: colors.success,
+  incorrect: colors.danger,
+};
 
 export function DeckDetailScreen({ route, navigation }: Props) {
   const { deckId } = route.params;
@@ -30,15 +35,7 @@ export function DeckDetailScreen({ route, navigation }: Props) {
         <Text style={styles.term}>{item.term}</Text>
         <Text style={styles.translation}>{item.translation}</Text>
       </View>
-      {isDue(item) ? (
-        <View style={styles.duePill}>
-          <Text style={styles.duePillText}>due</Text>
-        </View>
-      ) : (
-        <Text style={styles.scheduled}>
-          in {Math.max(0, Math.ceil((new Date(item.dueDate).getTime() - Date.now()) / 86400000))}d
-        </Text>
-      )}
+      <View style={[styles.statusDot, { backgroundColor: STATUS_COLOR[item.status] }]} />
     </Pressable>
   );
 
@@ -46,12 +43,26 @@ export function DeckDetailScreen({ route, navigation }: Props) {
     <View style={styles.container}>
       <View style={styles.header}>
         <Pressable
-          style={[styles.studyButton, stats.due === 0 && styles.studyButtonDisabled]}
-          disabled={stats.due === 0}
-          onPress={() => navigation.navigate('Study', { deckId })}
+          style={[styles.studyButton, stats.total === 0 && styles.studyButtonDisabled]}
+          disabled={stats.total === 0}
+          onPress={() => navigation.navigate('Study', { deckId, mode: 'all' })}
         >
           <Text style={styles.studyButtonText}>
-            {stats.due === 0 ? 'No cards due' : `Study ${stats.due} due card${stats.due === 1 ? '' : 's'}`}
+            {stats.total === 0 ? 'No cards yet' : `Study all (${stats.total})`}
+          </Text>
+        </Pressable>
+        <Pressable
+          style={[styles.reviseButton, stats.incorrect === 0 && styles.reviseButtonDisabled]}
+          disabled={stats.incorrect === 0}
+          onPress={() => navigation.navigate('Study', { deckId, mode: 'incorrect' })}
+        >
+          <Text
+            style={[
+              styles.reviseButtonText,
+              stats.incorrect === 0 && styles.reviseButtonTextDisabled,
+            ]}
+          >
+            {stats.incorrect === 0 ? 'Nothing to revise' : `Revise wrong answers (${stats.incorrect})`}
           </Text>
         </Pressable>
       </View>
@@ -79,7 +90,7 @@ export function DeckDetailScreen({ route, navigation }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  header: { padding: spacing.md, paddingBottom: 0 },
+  header: { padding: spacing.md, paddingBottom: 0, gap: spacing.sm },
   studyButton: {
     backgroundColor: colors.primary,
     borderRadius: radius.md,
@@ -88,6 +99,15 @@ const styles = StyleSheet.create({
   },
   studyButtonDisabled: { backgroundColor: colors.border },
   studyButtonText: { color: colors.white, fontWeight: '700', fontSize: 15 },
+  reviseButton: {
+    backgroundColor: colors.danger,
+    borderRadius: radius.md,
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+  },
+  reviseButtonDisabled: { backgroundColor: 'transparent' },
+  reviseButtonText: { color: colors.white, fontWeight: '700', fontSize: 15 },
+  reviseButtonTextDisabled: { color: colors.textMuted },
   listContent: { padding: spacing.md, gap: spacing.sm },
   emptyContainer: { flex: 1 },
   empty: {
@@ -113,14 +133,7 @@ const styles = StyleSheet.create({
   },
   term: { fontSize: 16, fontWeight: '700', color: colors.text },
   translation: { marginTop: 2, fontSize: 14, color: colors.textMuted },
-  duePill: {
-    backgroundColor: colors.primary,
-    borderRadius: radius.sm,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
-  },
-  duePillText: { color: colors.white, fontSize: 12, fontWeight: '700' },
-  scheduled: { fontSize: 12, color: colors.textMuted },
+  statusDot: { width: 12, height: 12, borderRadius: 6 },
   fab: {
     position: 'absolute',
     right: spacing.lg,

@@ -5,6 +5,8 @@ export interface Deck {
   createdAt: string;
 }
 
+export type CardStatus = 'unseen' | 'correct' | 'incorrect';
+
 export interface Card {
   id: string;
   deckId: string;
@@ -12,14 +14,9 @@ export interface Card {
   translation: string;
   notes?: string;
   createdAt: string;
-  interval: number; // days until next review
-  repetitions: number; // consecutive successful reviews
-  easeFactor: number; // SM-2 ease factor
-  dueDate: string; // ISO date string
+  status: CardStatus;
   lastReviewed?: string;
 }
-
-export type Rating = 'again' | 'hard' | 'good' | 'easy';
 
 export interface VocabData {
   decks: Deck[];

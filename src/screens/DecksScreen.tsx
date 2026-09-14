@@ -51,9 +51,9 @@ export function DecksScreen({ navigation }: Props) {
             {stats.total} card{stats.total === 1 ? '' : 's'}
           </Text>
         </View>
-        {stats.due > 0 && (
+        {stats.incorrect > 0 && (
           <View style={styles.dueBadge}>
-            <Text style={styles.dueBadgeText}>{stats.due} due</Text>
+            <Text style={styles.dueBadgeText}>{stats.incorrect} to revise</Text>
           </View>
         )}
       </Pressable>
@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
   deckDescription: { marginTop: 2, fontSize: 13, color: colors.textMuted },
   deckMeta: { marginTop: spacing.xs, fontSize: 12, color: colors.textMuted },
   dueBadge: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.danger,
     borderRadius: radius.sm,
     paddingHorizontal: spacing.sm,
     paddingVertical: 4,
