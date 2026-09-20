@@ -86,3 +86,32 @@ Each card has a `status`: `unseen`, `correct`, or `incorrect`. During a
 study session, marking a card **Right** sets it to `correct`, **Wrong**
 sets it to `incorrect`. A deck's "Revise wrong answers" button studies only
 the cards currently marked `incorrect`.
+
+## Building installable apps (Android & iOS)
+
+This app builds via [EAS Build](https://docs.expo.dev/build/introduction/)
+(Expo's cloud build service) — no Android Studio or Xcode required, builds
+from any OS including Windows. Build config lives in `eas.json`; app
+identifiers (`com.alyleprince.vocabflashcards`) are in `app.json`.
+
+```bash
+npm install -g eas-cli
+eas login                                    # free Expo account
+eas build --platform android --profile preview   # -> installable .apk
+eas build --platform ios --profile preview        # -> requires Apple Developer Program
+```
+
+- **Android**: the `preview` profile builds a plain `.apk` you can download
+  and install directly (enable "install unknown apps" for your browser/file
+  manager). No Google account or fee required for this.
+- **iOS**: Apple requires a paid **Apple Developer Program** membership
+  ($99/year) to run a build on a real iPhone, no matter how it's
+  distributed (this is an Apple platform rule, not an EAS limitation).
+  Once enrolled, `eas build --platform ios` handles certificates and
+  provisioning for you interactively. For distributing to your own/a few
+  people's phones without device-UDID hassle, submit to TestFlight instead:
+  `eas build --platform ios --profile production && eas submit --platform ios`,
+  then add testers in App Store Connect.
+
+The first `eas build` run links the project to your Expo account and adds
+an `extra.eas.projectId` to `app.json` — commit that change afterward.
