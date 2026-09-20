@@ -1,15 +1,18 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors, radius, spacing } from '../theme';
+import { speakText } from '../lib/speech';
 
 interface FlashcardProps {
   front: string;
   back: string;
   notes?: string;
   cardKey: string;
+  /** BCP 47 language code used to pronounce the front (term) side. */
+  language?: string;
 }
 
-export function Flashcard({ front, back, notes, cardKey }: FlashcardProps) {
+export function Flashcard({ front, back, notes, cardKey, language }: FlashcardProps) {
   const [flipped, setFlipped] = useState(false);
   const flipAnim = useRef(new Animated.Value(0)).current;
 
@@ -42,6 +45,13 @@ export function Flashcard({ front, back, notes, cardKey }: FlashcardProps) {
       <Animated.View
         style={[styles.card, styles.cardFace, { transform: [{ rotateY: frontRotate }] }]}
       >
+        <Pressable
+          style={styles.speakerButton}
+          hitSlop={12}
+          onPress={() => speakText(front, language)}
+        >
+          <Text style={styles.speakerIcon}>🔊</Text>
+        </Pressable>
         <Text style={styles.label}>TERM</Text>
         <Text style={styles.term}>{front}</Text>
         <Text style={styles.hint}>Tap to reveal</Text>
@@ -55,6 +65,13 @@ export function Flashcard({ front, back, notes, cardKey }: FlashcardProps) {
           { transform: [{ rotateY: backRotate }] },
         ]}
       >
+        <Pressable
+          style={[styles.speakerButton, styles.speakerButtonOnDark]}
+          hitSlop={12}
+          onPress={() => speakText(back)}
+        >
+          <Text style={styles.speakerIcon}>🔊</Text>
+        </Pressable>
         <Text style={[styles.label, styles.labelOnDark]}>TRANSLATION</Text>
         <Text style={styles.translation}>{back}</Text>
         {!!notes && <Text style={styles.notes}>{notes}</Text>}
@@ -125,5 +142,22 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     fontSize: 13,
     color: colors.textMuted,
+  },
+  speakerButton: {
+    position: 'absolute',
+    top: spacing.md,
+    right: spacing.md,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(0,0,0,0.06)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  speakerButtonOnDark: {
+    backgroundColor: 'rgba(255,255,255,0.18)',
+  },
+  speakerIcon: {
+    fontSize: 18,
   },
 });

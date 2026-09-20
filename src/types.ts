@@ -3,6 +3,8 @@ export interface Deck {
   name: string;
   description?: string;
   createdAt: string;
+  /** BCP 47 language code (e.g. "es-ES", "fr-FR") used to pronounce a card's term. */
+  language?: string;
 }
 
 export type CardStatus = 'unseen' | 'correct' | 'incorrect';

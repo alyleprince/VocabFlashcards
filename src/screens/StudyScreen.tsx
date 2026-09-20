@@ -10,7 +10,8 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Study'>;
 
 export function StudyScreen({ route, navigation }: Props) {
   const { deckId, mode } = route.params;
-  const { getCardsForDeck, getIncorrectCardsForDeck, markCard, cards } = useVocab();
+  const { decks, getCardsForDeck, getIncorrectCardsForDeck, markCard, cards } = useVocab();
+  const deck = decks.find((d) => d.id === deckId);
   // Snapshot the queue once so it doesn't change size mid-session as cards
   // get marked correct/incorrect.
   const [queue] = useState(() =>
@@ -66,6 +67,7 @@ export function StudyScreen({ route, navigation }: Props) {
           front={currentCard.term}
           back={currentCard.translation}
           notes={currentCard.notes}
+          language={deck?.language}
         />
       </View>
       <Text style={styles.instructions}>Tap the card to reveal the translation</Text>

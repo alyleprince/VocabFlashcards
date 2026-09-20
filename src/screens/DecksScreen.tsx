@@ -21,6 +21,7 @@ export function DecksScreen({ navigation }: Props) {
   const [modalVisible, setModalVisible] = useState(false);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [language, setLanguage] = useState('');
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -35,12 +36,13 @@ export function DecksScreen({ navigation }: Props) {
   const openModal = () => {
     setName('');
     setDescription('');
+    setLanguage('');
     setModalVisible(true);
   };
 
   const submit = () => {
     if (!name.trim()) return;
-    addDeck(name, description);
+    addDeck(name, description, language);
     setModalVisible(false);
   };
 
@@ -59,6 +61,7 @@ export function DecksScreen({ navigation }: Props) {
           )}
           <Text style={styles.deckMeta}>
             {stats.total} card{stats.total === 1 ? '' : 's'}
+            {item.language ? ` · ${item.language}` : ''}
           </Text>
         </View>
         {stats.incorrect > 0 && (
@@ -108,6 +111,13 @@ export function DecksScreen({ navigation }: Props) {
               placeholder="Description (optional)"
               value={description}
               onChangeText={setDescription}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Language for pronunciation, e.g. es-ES (optional)"
+              value={language}
+              onChangeText={setLanguage}
+              autoCapitalize="none"
             />
             <View style={styles.modalActions}>
               <Pressable
