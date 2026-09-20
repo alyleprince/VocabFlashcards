@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { LayoutAnimation, Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors, radius, spacing } from '../theme';
 import { speakTerm } from '../lib/speech';
 
@@ -11,91 +11,64 @@ interface FlashcardProps {
 }
 
 export function Flashcard({ front, back, notes, cardKey }: FlashcardProps) {
-  const [flipped, setFlipped] = useState(false);
-  const flipAnim = useRef(new Animated.Value(0)).current;
+  const [revealed, setRevealed] = useState(false);
 
   useEffect(() => {
-    setFlipped(false);
-    flipAnim.setValue(0);
-  }, [cardKey, flipAnim]);
+    setRevealed(false);
+  }, [cardKey]);
 
-  const toggleFlip = () => {
-    Animated.spring(flipAnim, {
-      toValue: flipped ? 0 : 1,
-      friction: 8,
-      tension: 10,
-      useNativeDriver: true,
-    }).start();
-    setFlipped(!flipped);
+  const toggleReveal = () => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setRevealed((r) => !r);
   };
 
-  const frontRotate = flipAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '180deg'],
-  });
-  const backRotate = flipAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['180deg', '360deg'],
-  });
-
   return (
-    <Pressable onPress={toggleFlip} style={styles.wrapper}>
-      <Animated.View
-        style={[styles.card, styles.cardFace, { transform: [{ rotateY: frontRotate }] }]}
-      >
+    <View style={styles.card}>
+      <View style={styles.termRow}>
+        <View style={styles.termTextWrapper}>
+          <Text style={styles.label}>TERM</Text>
+          <Text style={styles.term}>{front}</Text>
+        </View>
         <Pressable style={styles.speakerButton} hitSlop={12} onPress={() => speakTerm(front)}>
           <Text style={styles.speakerIcon}>🔊</Text>
         </Pressable>
-        <Text style={styles.label}>TERM</Text>
-        <Text style={styles.term}>{front}</Text>
-        <Text style={styles.hint}>Tap to reveal</Text>
-      </Animated.View>
-      <Animated.View
-        style={[
-          styles.card,
-          styles.cardFace,
-          styles.cardBack,
-          styles.cardBackAbsolute,
-          { transform: [{ rotateY: backRotate }] },
-        ]}
-      >
-        <Text style={[styles.label, styles.labelOnDark]}>TRANSLATION</Text>
-        <Text style={styles.translation}>{back}</Text>
-        {!!notes && <Text style={styles.notes}>{notes}</Text>}
-      </Animated.View>
-    </Pressable>
+      </View>
+
+      <Pressable style={styles.translationSection} onPress={toggleReveal}>
+        {revealed ? (
+          <>
+            <Text style={[styles.label, styles.labelOnDark]}>TRANSLATION</Text>
+            <Text style={styles.translation}>{back}</Text>
+            {!!notes && <Text style={styles.notes}>{notes}</Text>}
+          </>
+        ) : (
+          <Text style={styles.hint}>Tap to reveal translation</Text>
+        )}
+      </Pressable>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  wrapper: {
-    width: '100%',
-    aspectRatio: 1.3,
-  },
   card: {
+    width: '100%',
     borderRadius: radius.lg,
-    padding: spacing.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backfaceVisibility: 'hidden',
+    backgroundColor: colors.card,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 12,
     elevation: 3,
+    overflow: 'hidden',
   },
-  cardFace: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: colors.card,
+  termRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    padding: spacing.lg,
   },
-  cardBack: {
-    backgroundColor: colors.cardBack,
-  },
-  cardBackAbsolute: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
+  termTextWrapper: {
+    flex: 1,
   },
   label: {
     fontSize: 12,
@@ -104,14 +77,32 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     marginBottom: spacing.md,
   },
-  labelOnDark: {
-    color: 'rgba(255,255,255,0.7)',
-  },
   term: {
     fontSize: 30,
     fontWeight: '700',
     color: colors.text,
-    textAlign: 'center',
+  },
+  labelOnDark: {
+    color: 'rgba(255,255,255,0.7)',
+  },
+  speakerButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(0,0,0,0.06)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: spacing.sm,
+  },
+  speakerIcon: {
+    fontSize: 18,
+  },
+  translationSection: {
+    backgroundColor: colors.cardBack,
+    padding: spacing.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 96,
   },
   translation: {
     fontSize: 28,
@@ -126,22 +117,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   hint: {
-    marginTop: spacing.md,
-    fontSize: 13,
-    color: colors.textMuted,
-  },
-  speakerButton: {
-    position: 'absolute',
-    top: spacing.md,
-    right: spacing.md,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(0,0,0,0.06)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  speakerIcon: {
-    fontSize: 18,
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.85)',
   },
 });

@@ -68,7 +68,7 @@ export function StudyScreen({ route, navigation }: Props) {
           notes={currentCard.notes}
         />
       </View>
-      <Text style={styles.instructions}>Tap the card to reveal the translation</Text>
+      <Text style={styles.instructions}>Tap the translation area to reveal it</Text>
       <View style={styles.ratingRow}>
         <Pressable
           style={[styles.ratingButton, styles.incorrectButton]}
