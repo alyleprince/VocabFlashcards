@@ -14,9 +14,13 @@ A mobile app (iOS + Android) for memorizing vocabulary, built with Expo
   aloud in Spanish (on-device text-to-speech, like Google Translate).
 - **Revise wrong answers** — every card marked wrong is tracked, so you can
   run a focused session on just those later, from the deck screen.
-- **Backup & transfer** — export your whole vocabulary to a file, then
-  import it on another phone to switch devices without an account. No
-  backend, no cloud — just a file you control.
+- **Copy / move cards between decks** — from a card's edit screen, copy it
+  into another deck (keeps it in both) or move it (removes it from the
+  original). Handy for curating a separate deck to share with someone else.
+- **Backup & transfer** — export your whole vocabulary, or just one deck, to
+  a file, then import it on another phone (or send it to someone else) to
+  bring vocabulary across without an account. No backend, no cloud — just a
+  file you control.
 - **Offline-first** — all data is stored locally on-device with
   `AsyncStorage`; no account or network connection required to use the app.
 
@@ -56,16 +60,19 @@ src/
     BackupScreen.tsx          # export / import vocabulary
 ```
 
-## Switching phones (backup & transfer)
+## Switching phones, and sharing a deck (backup & transfer)
 
-Tap **Backup** on the deck list, then:
-
-- **Export** writes all your decks/cards to a `vocabflashcards-export-*.json`
-  file and opens the system share sheet — send it to yourself however you
-  like (email, AirDrop, Google Drive, Files app, etc).
-- **Import** (on the new phone) opens the file picker; pick that file and
-  its decks/cards are merged into your library. Decks are matched by name
-  and cards by term+translation, so importing the same file twice never
+- **Export everything**: tap **Backup** on the deck list, then **Export
+  vocabulary** — writes all decks/cards to a
+  `vocabflashcards-export-*.json` file and opens the system share sheet.
+- **Export one deck**: open a deck and tap **Export** in the header — writes
+  just that deck (and its cards) to `vocabflashcards-<deck-name>-*.json`.
+  Useful for curating a deck of, say, "words for my partner" via
+  copy-to-deck, then periodically exporting just that deck to send them.
+- **Import** (on the receiving phone, whether that's your own new phone or
+  someone else's): Backup → **Import vocabulary**, pick the file. Its
+  decks/cards are merged into the local library — decks matched by name,
+  cards by term+translation, so importing the same file twice never
   creates duplicates.
 
 The export file is plain JSON with a `format`/`version` header so the app

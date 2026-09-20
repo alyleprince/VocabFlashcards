@@ -56,13 +56,24 @@ function parse(raw: string): VocabData {
   return { decks, cards };
 }
 
-function timestampedFileName(): string {
-  const stamp = new Date().toISOString().slice(0, 10);
-  return `vocabflashcards-export-${stamp}.json`;
+function slugify(text: string): string {
+  return text
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
 }
 
-export async function exportVocabData(data: VocabData): Promise<void> {
-  const file = new File(Paths.cache, timestampedFileName());
+function timestampedFileName(label?: string): string {
+  const stamp = new Date().toISOString().slice(0, 10);
+  const slug = label ? slugify(label) : '';
+  return slug
+    ? `vocabflashcards-${slug}-${stamp}.json`
+    : `vocabflashcards-export-${stamp}.json`;
+}
+
+export async function exportVocabData(data: VocabData, label?: string): Promise<void> {
+  const file = new File(Paths.cache, timestampedFileName(label));
   file.create({ overwrite: true, intermediates: true });
   file.write(serialize(data));
 
@@ -72,7 +83,7 @@ export async function exportVocabData(data: VocabData): Promise<void> {
   await Sharing.shareAsync(file.uri, {
     mimeType: 'application/json',
     UTI: 'public.json',
-    dialogTitle: 'Export Vocab Flashcards',
+    dialogTitle: label ? `Export ${label}` : 'Export Vocab Flashcards',
   });
 }
 

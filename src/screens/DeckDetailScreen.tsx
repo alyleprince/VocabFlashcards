@@ -1,8 +1,9 @@
-import React, { useLayoutEffect } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import React, { useLayoutEffect, useState } from 'react';
+import { ActivityIndicator, Alert, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 import { useVocab } from '../context/VocabProvider';
+import { exportVocabData } from '../lib/backup';
 import { colors, radius, spacing } from '../theme';
 import { Card } from '../types';
 
@@ -20,10 +21,35 @@ export function DeckDetailScreen({ route, navigation }: Props) {
   const deck = decks.find((d) => d.id === deckId);
   const cards = getCardsForDeck(deckId);
   const stats = getDeckStats(deckId);
+  const [exporting, setExporting] = useState(false);
+
+  const exportThisDeck = async () => {
+    if (!deck) return;
+    setExporting(true);
+    try {
+      await exportVocabData({ decks: [deck], cards }, deck.name);
+    } catch (err) {
+      Alert.alert('Couldn’t export', err instanceof Error ? err.message : String(err));
+    } finally {
+      setExporting(false);
+    }
+  };
 
   useLayoutEffect(() => {
-    navigation.setOptions({ title: deck?.name ?? 'Deck' });
-  }, [navigation, deck]);
+    navigation.setOptions({
+      title: deck?.name ?? 'Deck',
+      headerRight: () =>
+        exporting ? (
+          <ActivityIndicator color={colors.primary} />
+        ) : (
+          <Pressable onPress={exportThisDeck} hitSlop={12} disabled={cards.length === 0}>
+            <Text style={[styles.headerButton, cards.length === 0 && styles.headerButtonDisabled]}>
+              Export
+            </Text>
+          </Pressable>
+        ),
+    });
+  }, [navigation, deck, cards, exporting]);
 
   const renderCard = ({ item }: { item: Card }) => (
     <Pressable
@@ -151,4 +177,6 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   fabText: { color: colors.white, fontSize: 28, lineHeight: 30 },
+  headerButton: { color: colors.primary, fontWeight: '600', fontSize: 15, paddingHorizontal: spacing.xs },
+  headerButtonDisabled: { color: colors.textMuted },
 });

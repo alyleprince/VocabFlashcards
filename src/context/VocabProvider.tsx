@@ -32,6 +32,8 @@ interface VocabContextValue {
   ) => void;
   deleteCard: (cardId: string) => void;
   markCard: (cardId: string, correct: boolean) => void;
+  copyCardToDeck: (cardId: string, targetDeckId: string) => void;
+  moveCardToDeck: (cardId: string, targetDeckId: string) => void;
   getCardsForDeck: (deckId: string) => Card[];
   getIncorrectCardsForDeck: (deckId: string) => Card[];
   getDeckStats: (deckId: string) => DeckStats;
@@ -122,6 +124,29 @@ export function VocabProvider({ children }: { children: React.ReactNode }) {
       prev.map((c) =>
         c.id === cardId ? { ...c, status, lastReviewed: new Date().toISOString() } : c
       )
+    );
+  }, []);
+
+  const copyCardToDeck = useCallback((cardId: string, targetDeckId: string) => {
+    setCards((prev) => {
+      const source = prev.find((c) => c.id === cardId);
+      if (!source) return prev;
+      const copy: Card = {
+        id: generateId(),
+        deckId: targetDeckId,
+        term: source.term,
+        translation: source.translation,
+        notes: source.notes,
+        createdAt: new Date().toISOString(),
+        status: 'unseen',
+      };
+      return [...prev, copy];
+    });
+  }, []);
+
+  const moveCardToDeck = useCallback((cardId: string, targetDeckId: string) => {
+    setCards((prev) =>
+      prev.map((c) => (c.id === cardId ? { ...c, deckId: targetDeckId } : c))
     );
   }, []);
 
@@ -225,6 +250,8 @@ export function VocabProvider({ children }: { children: React.ReactNode }) {
       updateCard,
       deleteCard,
       markCard,
+      copyCardToDeck,
+      moveCardToDeck,
       getCardsForDeck,
       getIncorrectCardsForDeck,
       getDeckStats,
@@ -241,6 +268,8 @@ export function VocabProvider({ children }: { children: React.ReactNode }) {
       updateCard,
       deleteCard,
       markCard,
+      copyCardToDeck,
+      moveCardToDeck,
       getCardsForDeck,
       getIncorrectCardsForDeck,
       getDeckStats,
