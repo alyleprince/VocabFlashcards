@@ -14,9 +14,11 @@ A mobile app (iOS + Android) for memorizing vocabulary, built with Expo
   aloud in Spanish (on-device text-to-speech, like Google Translate).
 - **Revise wrong answers** — every card marked wrong is tracked, so you can
   run a focused session on just those later, from the deck screen.
-- **Copy / move cards between decks** — from a card's edit screen, copy it
-  into another deck (keeps it in both) or move it (removes it from the
-  original). Handy for curating a separate deck to share with someone else.
+- **Multi-select** — long-press a card to select it, then tap more cards to
+  add to the selection; a toolbar lets you copy, move, or delete all
+  selected cards at once. Copy/move are also available for a single card
+  from its edit screen. Handy for curating a separate deck to share with
+  someone else.
 - **Backup & transfer** — export your whole vocabulary, or just one deck, to
   a file, then import it on another phone (or send it to someone else) to
   bring vocabulary across without an account. No backend, no cloud — just a

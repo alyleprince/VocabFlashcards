@@ -31,9 +31,10 @@ interface VocabContextValue {
     updates: Partial<Pick<Card, 'term' | 'translation' | 'notes'>>
   ) => void;
   deleteCard: (cardId: string) => void;
+  deleteCards: (cardIds: string[]) => void;
   markCard: (cardId: string, correct: boolean) => void;
-  copyCardToDeck: (cardId: string, targetDeckId: string) => void;
-  moveCardToDeck: (cardId: string, targetDeckId: string) => void;
+  copyCardsToDeck: (cardIds: string[], targetDeckId: string) => void;
+  moveCardsToDeck: (cardIds: string[], targetDeckId: string) => void;
   getCardsForDeck: (deckId: string) => Card[];
   getIncorrectCardsForDeck: (deckId: string) => Card[];
   getDeckStats: (deckId: string) => DeckStats;
@@ -118,6 +119,11 @@ export function VocabProvider({ children }: { children: React.ReactNode }) {
     setCards((prev) => prev.filter((c) => c.id !== cardId));
   }, []);
 
+  const deleteCards = useCallback((cardIds: string[]) => {
+    const idSet = new Set(cardIds);
+    setCards((prev) => prev.filter((c) => !idSet.has(c.id)));
+  }, []);
+
   const markCard = useCallback((cardId: string, correct: boolean) => {
     const status: CardStatus = correct ? 'correct' : 'incorrect';
     setCards((prev) =>
@@ -127,26 +133,28 @@ export function VocabProvider({ children }: { children: React.ReactNode }) {
     );
   }, []);
 
-  const copyCardToDeck = useCallback((cardId: string, targetDeckId: string) => {
+  const copyCardsToDeck = useCallback((cardIds: string[], targetDeckId: string) => {
+    const idSet = new Set(cardIds);
     setCards((prev) => {
-      const source = prev.find((c) => c.id === cardId);
-      if (!source) return prev;
-      const copy: Card = {
-        id: generateId(),
-        deckId: targetDeckId,
-        term: source.term,
-        translation: source.translation,
-        notes: source.notes,
-        createdAt: new Date().toISOString(),
-        status: 'unseen',
-      };
-      return [...prev, copy];
+      const copies: Card[] = prev
+        .filter((c) => idSet.has(c.id))
+        .map((source) => ({
+          id: generateId(),
+          deckId: targetDeckId,
+          term: source.term,
+          translation: source.translation,
+          notes: source.notes,
+          createdAt: new Date().toISOString(),
+          status: 'unseen',
+        }));
+      return [...prev, ...copies];
     });
   }, []);
 
-  const moveCardToDeck = useCallback((cardId: string, targetDeckId: string) => {
+  const moveCardsToDeck = useCallback((cardIds: string[], targetDeckId: string) => {
+    const idSet = new Set(cardIds);
     setCards((prev) =>
-      prev.map((c) => (c.id === cardId ? { ...c, deckId: targetDeckId } : c))
+      prev.map((c) => (idSet.has(c.id) ? { ...c, deckId: targetDeckId } : c))
     );
   }, []);
 
@@ -249,9 +257,10 @@ export function VocabProvider({ children }: { children: React.ReactNode }) {
       addCard,
       updateCard,
       deleteCard,
+      deleteCards,
       markCard,
-      copyCardToDeck,
-      moveCardToDeck,
+      copyCardsToDeck,
+      moveCardsToDeck,
       getCardsForDeck,
       getIncorrectCardsForDeck,
       getDeckStats,
@@ -267,9 +276,10 @@ export function VocabProvider({ children }: { children: React.ReactNode }) {
       addCard,
       updateCard,
       deleteCard,
+      deleteCards,
       markCard,
-      copyCardToDeck,
-      moveCardToDeck,
+      copyCardsToDeck,
+      moveCardsToDeck,
       getCardsForDeck,
       getIncorrectCardsForDeck,
       getDeckStats,

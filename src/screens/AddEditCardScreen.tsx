@@ -1,9 +1,7 @@
 import React, { useLayoutEffect, useState } from 'react';
 import {
   Alert,
-  FlatList,
   KeyboardAvoidingView,
-  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -15,6 +13,7 @@ import {
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 import { useVocab } from '../context/VocabProvider';
+import { DeckPickerModal } from '../components/DeckPickerModal';
 import { colors, radius, spacing } from '../theme';
 import { Deck } from '../types';
 
@@ -23,7 +22,7 @@ type PickerMode = 'copy' | 'move' | null;
 
 export function AddEditCardScreen({ route, navigation }: Props) {
   const { deckId, cardId } = route.params;
-  const { decks, cards, addCard, updateCard, deleteCard, copyCardToDeck, moveCardToDeck } =
+  const { decks, cards, addCard, updateCard, deleteCard, copyCardsToDeck, moveCardsToDeck } =
     useVocab();
   const existing = cardId ? cards.find((c) => c.id === cardId) : undefined;
 
@@ -59,11 +58,11 @@ export function AddEditCardScreen({ route, navigation }: Props) {
   const pickTargetDeck = (target: Deck) => {
     if (!existing || !pickerMode) return;
     if (pickerMode === 'copy') {
-      copyCardToDeck(existing.id, target.id);
+      copyCardsToDeck([existing.id], target.id);
       setPickerMode(null);
       Alert.alert('Copied', `"${existing.term}" was added to ${target.name}.`);
     } else {
-      moveCardToDeck(existing.id, target.id);
+      moveCardsToDeck([existing.id], target.id);
       setPickerMode(null);
       navigation.goBack();
     }
@@ -131,27 +130,13 @@ export function AddEditCardScreen({ route, navigation }: Props) {
         )}
       </ScrollView>
 
-      <Modal visible={pickerMode !== null} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>
-              {pickerMode === 'copy' ? 'Copy to which deck?' : 'Move to which deck?'}
-            </Text>
-            <FlatList
-              data={otherDecks}
-              keyExtractor={(d) => d.id}
-              renderItem={({ item }) => (
-                <Pressable style={styles.deckOption} onPress={() => pickTargetDeck(item)}>
-                  <Text style={styles.deckOptionText}>{item.name}</Text>
-                </Pressable>
-              )}
-            />
-            <Pressable style={styles.cancelPickerButton} onPress={() => setPickerMode(null)}>
-              <Text style={styles.cancelButtonText}>Cancel</Text>
-            </Pressable>
-          </View>
-        </View>
-      </Modal>
+      <DeckPickerModal
+        visible={pickerMode !== null}
+        title={pickerMode === 'copy' ? 'Copy to which deck?' : 'Move to which deck?'}
+        decks={otherDecks}
+        onSelect={pickTargetDeck}
+        onCancel={() => setPickerMode(null)}
+      />
     </KeyboardAvoidingView>
   );
 }
@@ -193,25 +178,4 @@ const styles = StyleSheet.create({
   moveButtonText: { color: colors.textMuted, fontWeight: '600', fontSize: 14 },
   deleteButton: { marginTop: spacing.md, alignItems: 'center', paddingVertical: spacing.sm },
   deleteButtonText: { color: colors.danger, fontWeight: '600' },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    backgroundColor: colors.white,
-    borderTopLeftRadius: radius.lg,
-    borderTopRightRadius: radius.lg,
-    padding: spacing.lg,
-    maxHeight: '70%',
-  },
-  modalTitle: { fontSize: 18, fontWeight: '700', color: colors.text, marginBottom: spacing.md },
-  deckOption: {
-    paddingVertical: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  deckOptionText: { fontSize: 16, color: colors.text },
-  cancelPickerButton: { paddingVertical: spacing.md, alignItems: 'center', marginTop: spacing.xs },
-  cancelButtonText: { color: colors.textMuted, fontWeight: '600' },
 });

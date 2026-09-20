@@ -1,5 +1,6 @@
 import React, { useLayoutEffect, useState } from 'react';
 import {
+  Alert,
   FlatList,
   Modal,
   Pressable,
@@ -44,13 +45,24 @@ export function DecksScreen({ navigation }: Props) {
     setModalVisible(false);
   };
 
+  const confirmDeleteDeck = (deck: Deck) => {
+    Alert.alert(
+      `Delete "${deck.name}"?`,
+      "This deletes the deck and all its cards. This can't be undone.",
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: () => deleteDeck(deck.id) },
+      ]
+    );
+  };
+
   const renderDeck = ({ item }: { item: Deck }) => {
     const stats = getDeckStats(item.id);
     return (
       <Pressable
         style={styles.deckCard}
         onPress={() => navigation.navigate('DeckDetail', { deckId: item.id })}
-        onLongPress={() => deleteDeck(item.id)}
+        onLongPress={() => confirmDeleteDeck(item)}
       >
         <View style={{ flex: 1 }}>
           <Text style={styles.deckName}>{item.name}</Text>
