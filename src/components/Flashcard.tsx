@@ -1,18 +1,16 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors, radius, spacing } from '../theme';
-import { speakText } from '../lib/speech';
+import { speakTerm } from '../lib/speech';
 
 interface FlashcardProps {
   front: string;
   back: string;
   notes?: string;
   cardKey: string;
-  /** BCP 47 language code used to pronounce the front (term) side. */
-  language?: string;
 }
 
-export function Flashcard({ front, back, notes, cardKey, language }: FlashcardProps) {
+export function Flashcard({ front, back, notes, cardKey }: FlashcardProps) {
   const [flipped, setFlipped] = useState(false);
   const flipAnim = useRef(new Animated.Value(0)).current;
 
@@ -45,11 +43,7 @@ export function Flashcard({ front, back, notes, cardKey, language }: FlashcardPr
       <Animated.View
         style={[styles.card, styles.cardFace, { transform: [{ rotateY: frontRotate }] }]}
       >
-        <Pressable
-          style={styles.speakerButton}
-          hitSlop={12}
-          onPress={() => speakText(front, language)}
-        >
+        <Pressable style={styles.speakerButton} hitSlop={12} onPress={() => speakTerm(front)}>
           <Text style={styles.speakerIcon}>🔊</Text>
         </Pressable>
         <Text style={styles.label}>TERM</Text>
@@ -65,13 +59,6 @@ export function Flashcard({ front, back, notes, cardKey, language }: FlashcardPr
           { transform: [{ rotateY: backRotate }] },
         ]}
       >
-        <Pressable
-          style={[styles.speakerButton, styles.speakerButtonOnDark]}
-          hitSlop={12}
-          onPress={() => speakText(back)}
-        >
-          <Text style={styles.speakerIcon}>🔊</Text>
-        </Pressable>
         <Text style={[styles.label, styles.labelOnDark]}>TRANSLATION</Text>
         <Text style={styles.translation}>{back}</Text>
         {!!notes && <Text style={styles.notes}>{notes}</Text>}
@@ -153,9 +140,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.06)',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  speakerButtonOnDark: {
-    backgroundColor: 'rgba(255,255,255,0.18)',
   },
   speakerIcon: {
     fontSize: 18,

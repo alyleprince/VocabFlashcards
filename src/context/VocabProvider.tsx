@@ -22,11 +22,8 @@ interface VocabContextValue {
   ready: boolean;
   decks: Deck[];
   cards: Card[];
-  addDeck: (name: string, description?: string, language?: string) => Deck;
-  updateDeck: (
-    deckId: string,
-    updates: Partial<Pick<Deck, 'name' | 'description' | 'language'>>
-  ) => void;
+  addDeck: (name: string, description?: string) => Deck;
+  updateDeck: (deckId: string, updates: Partial<Pick<Deck, 'name' | 'description'>>) => void;
   deleteDeck: (deckId: string) => void;
   addCard: (deckId: string, term: string, translation: string, notes?: string) => Card;
   updateCard: (
@@ -64,12 +61,11 @@ export function VocabProvider({ children }: { children: React.ReactNode }) {
     saveData(data);
   }, [decks, cards]);
 
-  const addDeck = useCallback((name: string, description?: string, language?: string) => {
+  const addDeck = useCallback((name: string, description?: string) => {
     const deck: Deck = {
       id: generateId(),
       name: name.trim(),
       description: description?.trim(),
-      language: language?.trim() || undefined,
       createdAt: new Date().toISOString(),
     };
     setDecks((prev) => [...prev, deck]);
@@ -77,7 +73,7 @@ export function VocabProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const updateDeck = useCallback(
-    (deckId: string, updates: Partial<Pick<Deck, 'name' | 'description' | 'language'>>) => {
+    (deckId: string, updates: Partial<Pick<Deck, 'name' | 'description'>>) => {
       setDecks((prev) =>
         prev.map((d) => (d.id === deckId ? { ...d, ...updates } : d))
       );
@@ -175,7 +171,6 @@ export function VocabProvider({ children }: { children: React.ReactNode }) {
             id: generateId(),
             name: incomingDeck.name,
             description: incomingDeck.description,
-            language: incomingDeck.language,
             createdAt: incomingDeck.createdAt ?? new Date().toISOString(),
           };
           nextDecks.push(newDeck);

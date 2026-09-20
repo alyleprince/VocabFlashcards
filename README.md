@@ -10,10 +10,8 @@ A mobile app (iOS + Android) for memorizing vocabulary, built with Expo
   (example sentence, gender, pronunciation, or notes in any language).
 - **Study sessions** — tap a card to reveal the translation, then mark it
   right (green) or wrong (red).
-- **Pronunciation** — tap the speaker icon on either side of a card to hear
-  it read aloud (on-device text-to-speech, like Google Translate). Set a
-  language code on a deck (e.g. `es-ES`, `fr-FR`) so the term is pronounced
-  correctly.
+- **Pronunciation** — tap the speaker icon on a card's term to hear it read
+  aloud in Spanish (on-device text-to-speech, like Google Translate).
 - **Revise wrong answers** — every card marked wrong is tracked, so you can
   run a focused session on just those later, from the deck screen.
 - **Backup & transfer** — export your whole vocabulary to a file, then
