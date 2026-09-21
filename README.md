@@ -8,10 +8,13 @@ A mobile app (iOS + Android) for memorizing vocabulary, built with Expo
 - **Decks** — organize vocabulary by language or topic.
 - **Custom flashcards** — add any word plus your own translation and notes
   (example sentence, gender, pronunciation, or notes in any language).
-- **Study sessions** — tap a card to reveal the translation, then mark it
-  right (green) or wrong (red).
-- **Pronunciation** — tap the speaker icon on a card's term to hear it read
-  aloud in Spanish (on-device text-to-speech, like Google Translate).
+- **Study sessions** — tap a card to reveal the other side, then mark it
+  right (green) or wrong (red). Two directions: **see word, guess meaning**
+  (default) or **see meaning, guess word** — pick per session from the deck
+  screen.
+- **Pronunciation** — tap the speaker icon to hear the Spanish term read
+  aloud (on-device text-to-speech, like Google Translate). In "see meaning,
+  guess word" mode, the speaker only appears once you've revealed the word.
 - **Revise wrong answers** — every card marked wrong is tracked, so you can
   run a focused session on just those later, from the deck screen.
 - **Multi-select** — long-press a card to select it, then tap more cards to

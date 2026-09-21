@@ -9,7 +9,7 @@ import { colors, radius, spacing } from '../theme';
 type Props = NativeStackScreenProps<RootStackParamList, 'Study'>;
 
 export function StudyScreen({ route, navigation }: Props) {
-  const { deckId, mode } = route.params;
+  const { deckId, mode, direction } = route.params;
   const { getCardsForDeck, getIncorrectCardsForDeck, markCard, cards } = useVocab();
   // Snapshot the queue once so it doesn't change size mid-session as cards
   // get marked correct/incorrect.
@@ -63,12 +63,17 @@ export function StudyScreen({ route, navigation }: Props) {
       <View style={styles.cardWrapper}>
         <Flashcard
           cardKey={currentCard.id}
-          front={currentCard.term}
-          back={currentCard.translation}
+          term={currentCard.term}
+          translation={currentCard.translation}
           notes={currentCard.notes}
+          direction={direction}
         />
       </View>
-      <Text style={styles.instructions}>Tap the translation area to reveal it</Text>
+      <Text style={styles.instructions}>
+        {direction === 'term-to-translation'
+          ? 'Tap the translation area to reveal it'
+          : 'Tap the card to reveal the Spanish word'}
+      </Text>
       <View style={styles.ratingRow}>
         <Pressable
           style={[styles.ratingButton, styles.incorrectButton]}

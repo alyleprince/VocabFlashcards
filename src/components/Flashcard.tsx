@@ -2,16 +2,19 @@ import React, { useEffect, useState } from 'react';
 import { LayoutAnimation, Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors, radius, spacing } from '../theme';
 import { speakTerm } from '../lib/speech';
+import { StudyDirection } from '../navigation/types';
 
 interface FlashcardProps {
-  front: string;
-  back: string;
+  term: string;
+  translation: string;
   notes?: string;
   cardKey: string;
+  direction: StudyDirection;
 }
 
-export function Flashcard({ front, back, notes, cardKey }: FlashcardProps) {
+export function Flashcard({ term, translation, notes, cardKey, direction }: FlashcardProps) {
   const [revealed, setRevealed] = useState(false);
+  const termFirst = direction === 'term-to-translation';
 
   useEffect(() => {
     setRevealed(false);
@@ -22,27 +25,45 @@ export function Flashcard({ front, back, notes, cardKey }: FlashcardProps) {
     setRevealed((r) => !r);
   };
 
+  const visibleLabel = termFirst ? 'TERM' : 'TRANSLATION';
+  const visibleText = termFirst ? term : translation;
+  const hiddenLabel = termFirst ? 'TRANSLATION' : 'TERM';
+  const hiddenText = termFirst ? translation : term;
+
   return (
     <View style={styles.card}>
       <View style={styles.termRow}>
         <View style={styles.termTextWrapper}>
-          <Text style={styles.label}>TERM</Text>
-          <Text style={styles.term}>{front}</Text>
+          <Text style={styles.label}>{visibleLabel}</Text>
+          <Text style={styles.term}>{visibleText}</Text>
         </View>
-        <Pressable style={styles.speakerButton} hitSlop={12} onPress={() => speakTerm(front)}>
-          <Text style={styles.speakerIcon}>🔊</Text>
-        </Pressable>
+        {termFirst && (
+          <Pressable style={styles.speakerButton} hitSlop={12} onPress={() => speakTerm(term)}>
+            <Text style={styles.speakerIcon}>🔊</Text>
+          </Pressable>
+        )}
       </View>
 
       <Pressable style={styles.translationSection} onPress={toggleReveal}>
         {revealed ? (
-          <>
-            <Text style={[styles.label, styles.labelOnDark]}>TRANSLATION</Text>
-            <Text style={styles.translation}>{back}</Text>
-            {!!notes && <Text style={styles.notes}>{notes}</Text>}
-          </>
+          <View style={styles.revealedRow}>
+            <View style={styles.revealedTextWrapper}>
+              <Text style={[styles.label, styles.labelOnDark]}>{hiddenLabel}</Text>
+              <Text style={styles.translation}>{hiddenText}</Text>
+              {!!notes && <Text style={styles.notes}>{notes}</Text>}
+            </View>
+            {!termFirst && (
+              <Pressable
+                style={[styles.speakerButton, styles.speakerButtonOnDark]}
+                hitSlop={12}
+                onPress={() => speakTerm(term)}
+              >
+                <Text style={styles.speakerIcon}>🔊</Text>
+              </Pressable>
+            )}
+          </View>
         ) : (
-          <Text style={styles.hint}>Tap to reveal translation</Text>
+          <Text style={styles.hint}>Tap to reveal {hiddenLabel.toLowerCase()}</Text>
         )}
       </Pressable>
     </View>
@@ -94,6 +115,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginLeft: spacing.sm,
   },
+  speakerButtonOnDark: {
+    backgroundColor: 'rgba(255,255,255,0.18)',
+  },
   speakerIcon: {
     fontSize: 18,
   },
@@ -103,6 +127,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 96,
+  },
+  revealedRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    width: '100%',
+  },
+  revealedTextWrapper: {
+    flex: 1,
+    alignItems: 'center',
   },
   translation: {
     fontSize: 28,

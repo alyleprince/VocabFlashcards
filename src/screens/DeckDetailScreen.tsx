@@ -1,7 +1,7 @@
 import React, { useLayoutEffect, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/types';
+import { RootStackParamList, StudyDirection } from '../navigation/types';
 import { useVocab } from '../context/VocabProvider';
 import { exportVocabData } from '../lib/backup';
 import { DeckPickerModal } from '../components/DeckPickerModal';
@@ -25,6 +25,7 @@ export function DeckDetailScreen({ route, navigation }: Props) {
   const cards = getCardsForDeck(deckId);
   const stats = getDeckStats(deckId);
   const [exporting, setExporting] = useState(false);
+  const [direction, setDirection] = useState<StudyDirection>('term-to-translation');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [pickerMode, setPickerMode] = useState<PickerMode>(null);
   const selecting = selectedIds.size > 0;
@@ -176,10 +177,44 @@ export function DeckDetailScreen({ route, navigation }: Props) {
         </View>
       ) : (
         <View style={styles.header}>
+          <View style={styles.directionToggle}>
+            <Pressable
+              style={[
+                styles.directionOption,
+                direction === 'term-to-translation' && styles.directionOptionActive,
+              ]}
+              onPress={() => setDirection('term-to-translation')}
+            >
+              <Text
+                style={[
+                  styles.directionOptionText,
+                  direction === 'term-to-translation' && styles.directionOptionTextActive,
+                ]}
+              >
+                See word, guess meaning
+              </Text>
+            </Pressable>
+            <Pressable
+              style={[
+                styles.directionOption,
+                direction === 'translation-to-term' && styles.directionOptionActive,
+              ]}
+              onPress={() => setDirection('translation-to-term')}
+            >
+              <Text
+                style={[
+                  styles.directionOptionText,
+                  direction === 'translation-to-term' && styles.directionOptionTextActive,
+                ]}
+              >
+                See meaning, guess word
+              </Text>
+            </Pressable>
+          </View>
           <Pressable
             style={[styles.studyButton, stats.total === 0 && styles.studyButtonDisabled]}
             disabled={stats.total === 0}
-            onPress={() => navigation.navigate('Study', { deckId, mode: 'all' })}
+            onPress={() => navigation.navigate('Study', { deckId, mode: 'all', direction })}
           >
             <Text style={styles.studyButtonText}>
               {stats.total === 0 ? 'No cards yet' : `Study all (${stats.total})`}
@@ -188,7 +223,7 @@ export function DeckDetailScreen({ route, navigation }: Props) {
           <Pressable
             style={[styles.reviseButton, stats.incorrect === 0 && styles.reviseButtonDisabled]}
             disabled={stats.incorrect === 0}
-            onPress={() => navigation.navigate('Study', { deckId, mode: 'incorrect' })}
+            onPress={() => navigation.navigate('Study', { deckId, mode: 'incorrect', direction })}
           >
             <Text
               style={[
@@ -238,6 +273,22 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   header: { padding: spacing.md, paddingBottom: 0, gap: spacing.sm },
   hint: { textAlign: 'center', fontSize: 12, color: colors.textMuted },
+  directionToggle: {
+    flexDirection: 'row',
+    backgroundColor: colors.card,
+    borderRadius: radius.md,
+    padding: 4,
+    gap: 4,
+  },
+  directionOption: {
+    flex: 1,
+    borderRadius: radius.sm,
+    paddingVertical: spacing.sm,
+    alignItems: 'center',
+  },
+  directionOptionActive: { backgroundColor: colors.primary },
+  directionOptionText: { color: colors.textMuted, fontWeight: '600', fontSize: 13 },
+  directionOptionTextActive: { color: colors.white },
   studyButton: {
     backgroundColor: colors.primary,
     borderRadius: radius.md,
