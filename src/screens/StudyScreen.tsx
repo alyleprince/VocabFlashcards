@@ -4,6 +4,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 import { useVocab } from '../context/VocabProvider';
 import { Flashcard } from '../components/Flashcard';
+import { shuffle } from '../lib/shuffle';
 import { colors, radius, spacing } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Study'>;
@@ -12,12 +13,19 @@ export function StudyScreen({ route, navigation }: Props) {
   const { deckId, mode, direction } = route.params;
   const { getCardsForDeck, getIncorrectCardsForDeck, markCard, cards } = useVocab();
   // Snapshot the queue once so it doesn't change size mid-session as cards
-  // get marked correct/incorrect.
-  const [queue] = useState(() =>
-    (mode === 'incorrect' ? getIncorrectCardsForDeck(deckId) : getCardsForDeck(deckId)).map(
-      (c) => c.id
-    )
-  );
+  // get marked correct/incorrect. "Study all" studies unseen cards first,
+  // then wrong ones, then right ones - each group shuffled independently -
+  // so new/struggling words come up before ones you've already nailed.
+  const [queue] = useState(() => {
+    if (mode === 'incorrect') {
+      return shuffle(getIncorrectCardsForDeck(deckId)).map((c) => c.id);
+    }
+    const deckCards = getCardsForDeck(deckId);
+    const unseen = shuffle(deckCards.filter((c) => c.status === 'unseen'));
+    const incorrect = shuffle(deckCards.filter((c) => c.status === 'incorrect'));
+    const correct = shuffle(deckCards.filter((c) => c.status === 'correct'));
+    return [...unseen, ...incorrect, ...correct].map((c) => c.id);
+  });
   const [index, setIndex] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
   const [incorrectCount, setIncorrectCount] = useState(0);
